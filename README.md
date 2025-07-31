@@ -1,3 +1,4 @@
+```
 /faqeera/
 │
 ├── 📄 .gitignore
@@ -60,3 +61,4 @@ A complete, persistent shopping cart.
 Secure payment integration with Razorpay.
 A full user authentication system with protected routes.
 A personalized "My Account" area with order history.
+```
