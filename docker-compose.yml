@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  # This is our MongoDB database service
+  mongo:
+    image: mongo:latest # Use the latest official MongoDB image
+    container_name: faqeera_mongo_db # A custom name for the container
+    ports:
+      - "27017:27017" # Map the port from the container to our Mac
+    volumes:
+      - mongo-data:/data/db # This saves our database data even if we stop the container
+
+volumes:
+  mongo-data: # Defines the volume to persist data
