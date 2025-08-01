@@ -17,6 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuthStore } from '@/store/auth';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { registerUser } from '@/lib/api';
 
 const formSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
@@ -35,14 +36,7 @@ export default function RegisterPage() {
 
   const onSubmit = async (values) => {
     try {
-      const response = await fetch('/api/users/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
-      });
-      const data = await response.json();
-
-      if (!response.ok) throw new Error(data.message || 'Failed to register');
+      const data = await registerUser(values);
       
       login(data);
       toast.success('Registration successful! Welcome.');
@@ -53,7 +47,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="w-full flex items-center justify-center py-24">
+   <div className="container flex items-center justify-center py-24">
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-2xl">Create an Account</CardTitle>

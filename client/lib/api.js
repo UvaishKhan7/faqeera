@@ -60,10 +60,25 @@ export const registerUser = (userData) => fetchAPI('/users/register', {
 
 
 // --- PUBLIC-FACING PRODUCT FUNCTIONS ---
-export const getPublicProducts = (searchParams = {}) => {
+// ... (All other functions in this file are correct)
+
+// --- THIS IS THE FINAL, SIMPLIFIED VERSION ---
+export async function getPublicProducts(searchParams = {}) {
   const params = new URLSearchParams(searchParams);
-  return fetchAPI(`/products?${params.toString()}`);
-};
+  const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/products?${params.toString()}`;
+
+  try {
+    const res = await fetch(url, { cache: 'no-store' }); // Use no-store to guarantee freshness
+    if (!res.ok) throw new Error('Failed to fetch public products');
+    const data = await res.json();
+    
+    // It now ONLY returns the products array, which prevents crashes.
+    return data.products || []; 
+  } catch (error) {
+    console.error('[GET_PUBLIC_PRODUCTS_ERROR]', error);
+    return []; // Always return an array.
+  }
+}
 
 export const getProductBySlug = (slug) => fetchAPI(`/products/slug/${slug}`);
 
