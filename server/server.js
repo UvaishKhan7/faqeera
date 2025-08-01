@@ -26,9 +26,6 @@ const corsOptions = {
   credentials: true,
 };
 
-// CRITICAL: We enable the pre-flight request for all routes.
-// This is the step that was likely failing.
-app.options('*', cors(corsOptions));
 app.use(cors(corsOptions));
 app.use(express.json());
 
