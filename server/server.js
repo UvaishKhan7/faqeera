@@ -20,20 +20,21 @@ const corsOptions = {
     if (!origin || allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
-      callback(new Error('Your origin is not allowed by CORS.'));
+      console.error(`CORS Error: Origin ${origin} not allowed.`);
+      callback(new Error('This origin is not allowed by CORS.'));
     }
   },
   // We must also explicitly allow the methods and headers our frontend uses.
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true, // This allows cookies/authorization headers to be sent
+  methods: 'GET, POST, PUT, DELETE, OPTIONS',
+  allowedHeaders: 'Content-Type, Authorization',
+  credentials: true,
 };
 
 // First, handle preflight requests for all routes
 app.options('*', cors(corsOptions));
 
 // Then, use the CORS policy for all other requests
-app.use(cors(corsOptions)); 
+app.use(cors(corsOptions));
 
 app.use(express.json());
 
@@ -43,7 +44,7 @@ const paymentRoutes = require('./routes/payment.routes');
 const userRoutes = require('./routes/user.routes');
 const orderRoutes = require('./routes/order.routes');
 const adminRoutes = require('./routes/admin.routes');
-const uploadRoutes = require('./routes/upload.routes'); 
+const uploadRoutes = require('./routes/upload.routes');
 const siteContentRoutes = require('./routes/siteContent.routes');
 
 // Test Route

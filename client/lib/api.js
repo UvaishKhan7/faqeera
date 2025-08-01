@@ -1,87 +1,86 @@
 // This is the single source of truth for our backend URL.
-// It will use your .env.local value in development, and a different value in production.
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+
+// This console.log is a crucial debugging tool.
+// It will appear in your BROWSER console.
+console.log("API Library Initialized. Using Base URL:", API_BASE_URL);
+
+/**
+ * A centralized, robust fetch function for all our API calls.
+ * @param {string} path - The API path to fetch (e.g., '/users/login').
+ * @param {object} options - Optional fetch options (method, headers, body, cache).
+ * @returns {Promise<object>} - The JSON response from the API.
+ * @throws {Error} - Throws an error with the server's message if the fetch fails.
+ */
 async function fetchAPI(path, options = {}) {
-  // Set default headers. More headers can be added from the options.
+  // If the API_BASE_URL is not set, we must fail immediately.
+  if (!API_BASE_URL) {
+    const errorMessage = "FATAL: NEXT_PUBLIC_API_BASE_URL is not defined. Check client/.env.local";
+    console.error(errorMessage);
+    throw new Error(errorMessage);
+  }
+
+  const url = `${API_BASE_URL}/api${path}`;
   const defaultHeaders = { 'Content-Type': 'application/json' };
   const config = {
     ...options,
     headers: { ...defaultHeaders, ...options.headers },
   };
 
-  const url = `${API_BASE_URL}/api${path}`;
-
   try {
     const res = await fetch(url, config);
     
-    // Handle cases where the response might be empty (e.g., a successful DELETE request)
+    // Handle successful but empty responses (e.g., DELETE).
     if (res.status === 204) return { success: true };
 
     const data = await res.json();
     
     if (!res.ok) {
-      // Use the server's error message if available, otherwise a default one.
-      throw new Error(data.message || `API error on path: ${path} with status ${res.status}`);
+      // Use the specific error message from the backend if available.
+      throw new Error(data.message || `API request to ${path} failed with status ${res.status}`);
     }
     
     return data;
   } catch (error) {
-    console.error(`[FETCH_API_ERROR] Path: ${path}`, error);
-    // Re-throw the error so the calling component can catch it and display a toast.
-    throw error;
+    console.error(`[FETCH_API_ERROR] Path: ${path}`, error.message);
+    throw error; // Re-throw the error so the calling component's catch block can handle it.
   }
 }
 
-// --- FOR PUBLIC-FACING PAGES (Homepage, Search) ---
-export async function getPublicProducts({ keyword = '', category = '', sortBy = '' } = {}) {
-  // This function is clean and simple. It receives safe string values.
-  const params = new URLSearchParams({ keyword, category, sortBy });
-  const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/products?${params.toString()}`;
+// --- AUTHENTICATION FUNCTIONS (Previously Missing) ---
+export const loginUser = (credentials) => fetchAPI('/users/login', {
+  method: 'POST',
+  body: JSON.stringify(credentials),
+});
 
-  try {
-    const res = await fetch(url, { next: { revalidate: 60 } });
-    if (!res.ok) throw new Error('Failed to fetch public products');
-    const data = await res.json();
-    
-    // Crucially, it returns the ENTIRE object from the backend
-    return data; 
-  } catch (error) {
-    console.error('[GET_PUBLIC_PRODUCTS_ERROR]', error);
-    // On error, return a consistent object shape.
-    return { products: [], keyword: '', category: '' };
-  }
-}
+export const registerUser = (userData) => fetchAPI('/users/register', {
+  method: 'POST',
+  body: JSON.stringify(userData),
+});
 
-// --- FOR ADMIN-FACING PAGES ---
-export async function getAdminProducts(token) {
-    const url = `${API_BASE_URL}/api/admin/products/all`;
-    try {
-        const res = await fetch(url, {
-            headers: { Authorization: `Bearer ${token}` },
-            cache: 'no-store',
-        });
-        if (!res.ok) throw new Error('Failed to fetch admin products');
-        // Admin endpoint returns a raw array, so this is correct.
-        return await res.json();
-    } catch (error) {
-        console.error('[GET_ADMIN_PRODUCTS_ERROR]', error);
-        return [];
-    }
-}
 
-// Fetches a single product by its slug (for public product detail pages)
-export async function getProductBySlug(slug) {
-  if (!slug) return null;
-  return fetchAPI(`/products/slug/${slug}`, {
-    next: { revalidate: 60 }
-  });
-}
+// --- PUBLIC-FACING PRODUCT FUNCTIONS ---
+export const getPublicProducts = (searchParams = {}) => {
+  const params = new URLSearchParams(searchParams);
+  return fetchAPI(`/products?${params.toString()}`);
+};
 
-// Fetches a single product by its ID (for the admin edit page)
-export async function getProductById(id, token) { // Added token for consistency
-  if (!id) return null;
-  return fetchAPI(`/products/${id}`, {
-    headers: { Authorization: `Bearer ${token}` }, // It's good practice to secure even GETs by ID
-    cache: 'no-store'
-  });
-}
+export const getProductBySlug = (slug) => fetchAPI(`/products/slug/${slug}`);
+
+
+// --- ADMIN & PROTECTED USER FUNCTIONS ---
+export const getAdminProducts = (token) => fetchAPI('/admin/products/all', {
+  headers: { Authorization: `Bearer ${token}` },
+  cache: 'no-store',
+});
+
+export const getMyOrders = (token) => fetchAPI('/orders/myorders', {
+  headers: { Authorization: `Bearer ${token}` },
+  cache: 'no-store',
+});
+
+// Note: getProductById is used by the admin edit page, so it should be protected.
+export const getProductById = (id, token) => fetchAPI(`/products/${id}`, {
+  headers: { Authorization: `Bearer ${token}` },
+  cache: 'no-store',
+});

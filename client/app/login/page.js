@@ -18,6 +18,7 @@ import { useAuthStore } from '@/store/auth';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import Link from 'next/link';
+import { loginUser } from '@/lib/api';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email.' }),
@@ -35,26 +36,18 @@ export default function LoginPage() {
 
   const onSubmit = async (values) => {
     try {
-      const response = await fetch('/api/users/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
-      });
-      
-      const data = await response.json();
-
-      if (!response.ok) throw new Error(data.message || 'Failed to login');
-      
+      const data = await loginUser(values);
       login(data);
       toast.success('Login successful! Welcome back.');
       router.push('/');
     } catch (error) {
+      // Our fetchAPI helper re-throws the error with a proper message.
       toast.error(error.message);
     }
   };
 
   return (
-    <div className="w-full flex items-center justify-center py-24">
+    <div className="container flex items-center justify-center py-24">
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-2xl">Welcome Back</CardTitle>
@@ -77,12 +70,12 @@ export default function LoginPage() {
                 </FormItem>
               )} />
               <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting ? 'Signing in...' : 'Sign In'}
+                {form.formState.isSubmitting ? 'Signing In...' : 'Sign In'}
               </Button>
             </form>
           </Form>
           <div className="mt-4 text-center text-sm">
-            Don&apos;t have an account?{' '}
+            Don't have an account?{' '}
             <Link href="/register" className="underline">
               Sign up
             </Link>
