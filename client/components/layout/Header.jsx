@@ -42,6 +42,9 @@ export default function Header() {
                   <Link href="/admin/products" className="block py-3 text-lg" onClick={() => setIsMobileMenuOpen(false)}>
                     Manage Products
                   </Link>
+                  <Link href="/admin/hero-section" className="..." onClick={() => setIsMobileMenuOpen(false)}>
+                    Manage Hero
+                  </Link>
                 </>
               )}
               <div className="pt-4">
@@ -72,10 +75,13 @@ export default function Header() {
             {user.isAdmin && (
               <>
                 <Button asChild variant="ghost">
-                  <Link href="/admin/orders">Orders</Link>
+                  <Link href="/admin/orders">Manage Orders</Link>
                 </Button>
                 <Button asChild variant="ghost">
-                  <Link href="/admin/products">Products</Link>
+                  <Link href="/admin/products">Manage Products</Link>
+                </Button>
+                <Button asChild variant="outline">
+                  <Link href="/admin/hero-section">Manage Hero</Link>
                 </Button>
               </>
             )}
@@ -101,7 +107,7 @@ export default function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background rounded-b-4xl">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         {/* Logo */}
         <Link href="/" className="flex items-center">

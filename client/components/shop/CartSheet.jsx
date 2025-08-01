@@ -21,7 +21,6 @@ export default function CartSheet() {
   const [isMounted, setIsMounted] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
-  // This is a crucial step to prevent hydration errors with persisted state
   useEffect(() => {
     setIsMounted(true);
   }, []);
@@ -33,7 +32,6 @@ export default function CartSheet() {
   );
 
   if (!isMounted) {
-    // Render a placeholder or nothing until the component is mounted on the client
     return (
       <Button variant="outline" size="icon" className="relative">
         <ShoppingBag className="h-4 w-4" />
@@ -60,12 +58,12 @@ export default function CartSheet() {
         <SheetHeader>
           <SheetTitle>Shopping Cart</SheetTitle>
         </SheetHeader>
-        <div className="mt-4 h-[calc(100vh-150px)] overflow-y-auto pr-4">
+        <div className="w-full mx-auto mt-4 h-[calc(100vh-150px)] overflow-y-auto px-4 space-x-4">
           {items.length > 0 ? (
             items.map((item) => (
               <div
                 key={item.cartItemId}
-                className="flex items-center space-x-4 py-4 border-b"
+                className="flex items-center space-x-6 py-4 border-b"
               >
                 <Image
                   src={item.image}

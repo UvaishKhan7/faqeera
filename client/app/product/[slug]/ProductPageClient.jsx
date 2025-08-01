@@ -61,17 +61,14 @@ export default function ProductPageClient({ product }) {
     <div className="bg-background text-foreground">
       <div className="mx-auto max-w-screen-xl px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
         <div className="grid grid-cols-1 items-start gap-12 lg:grid-cols-2">
-          {/* Image Gallery */}
           <motion.div
             initial={{ opacity: 0, x: -50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 0.2, ease: 'easeOut' }}
-            className="sticky top-24 aspect-square" // Makes image sticky on larger screens
+            className="sticky top-16 aspect-square bg-white z-50"
           >
             <ProductImageCarousel images={product.images} productName={product.name} />
           </motion.div>
-
-          {/* Product Info */}
           <motion.div
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
@@ -80,32 +77,25 @@ export default function ProductPageClient({ product }) {
             <h1 className="mt-4 text-4xl font-bold tracking-tight sm:text-5xl">
               {product.name}
             </h1>
-
-            {/* --- NEW RATING DISPLAY --- */}
             <div className="mt-3 flex items-center">
               <StarRating
                 rating={product.rating}
                 size={24}
-                isEditable={false} // This makes it a display-only component
+                isEditable={false}
               />
               <p className="ml-2 text-sm text-muted-foreground">
                 ({product.numReviews} reviews)
               </p>
             </div>
-
             <div className="mt-6">
               <p className="text-3xl tracking-tight text-primary">
                 ₹{product.price.toFixed(2)}
               </p>
             </div>
-
             <div className="mt-8 prose prose-lg max-w-none text-muted-foreground">
               <p>{product.description}</p>
             </div>
-
-             {/* --- NEW VARIANT SELECTION UI --- */}
             <form className="mt-8">
-              {/* Color Selection */}
               <fieldset>
                 <legend className="text-lg font-medium mb-4">Color</legend>
                 <div className="flex flex-wrap gap-2">
@@ -121,8 +111,6 @@ export default function ProductPageClient({ product }) {
                   ))}
                 </div>
               </fieldset>
-
-              {/* Size Selection (only appears after color is selected) */}
               {selectedColor && (
                 <fieldset className="mt-8">
                   <legend className="text-lg font-medium mb-4">Size</legend>
@@ -145,9 +133,23 @@ export default function ProductPageClient({ product }) {
                   </RadioGroup>
                 </fieldset>
               )}
-              
-              {/* Add to Cart Button */}
-              <div className="mt-10">
+              <div className="mt-4 h-6">
+                {selectedVariant && (
+                  <motion.p 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className={`text-sm font-medium ${selectedVariant.stock < 5 && selectedVariant.stock > 0 ? 'text-destructive' : 'text-muted-foreground'}`}
+                  >
+                    {5 > selectedVariant.stock > 0 
+                      ? `Only ${selectedVariant.stock} left in stock!` 
+                      : selectedVariant.stock > 5 
+                      ? `Available ${selectedVariant.stock} in stock.` 
+                      : 'Out of stock'
+                    }
+                  </motion.p>
+                )}
+              </div>
+              <div className="mt-4">
                 <Button 
                   type="button" 
                   onClick={handleAddToCart}
@@ -159,8 +161,6 @@ export default function ProductPageClient({ product }) {
                 </Button>
               </div>
             </form>
-            
-            {/* Accordion for extra details */}
             <Accordion type="single" collapsible className="mt-8 w-full">
               <AccordionItem value="item-1">
                 <AccordionTrigger>Sizing & Fit</AccordionTrigger>

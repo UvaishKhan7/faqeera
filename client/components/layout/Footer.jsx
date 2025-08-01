@@ -10,7 +10,7 @@ const FooterLink = ({ href, children }) => (
 
 export default function Footer() {
   return (
-    <footer className="w-full bg-muted/40 border-t">
+    <footer className="w-full bg-muted/40 border-t rounded-t-4xl">
       <div className="w-full mx-auto px-4 py-12 flex flex-col items-center justify-center">
         <div className="max-w-full lg:m-auto grid grid-cols-1 md:grid-cols-4 lg:grid-cols-4 gap-6">
           

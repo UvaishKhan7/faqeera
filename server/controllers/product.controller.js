@@ -45,14 +45,15 @@ const getProductById = asyncHandler(async (req, res) => {
 // @desc    Get a single product by its slug
 // @route   GET /api/products/slug/:slug
 // @access  Public
+// @desc    Get a single product by its slug
 const getProductBySlug = asyncHandler(async (req, res) => {
   const product = await Product.findOne({ slug: req.params.slug });
   if (product) {
     const productData = {
-      ...product.toObject(), // Convert the Mongoose document to a plain JS object
+      ...product.toObject(),
       variants: product.variants || [],
     };
-    res.json(product);
+    res.json(productData);
   } else {
     res.status(404);
     throw new Error('Product not found');

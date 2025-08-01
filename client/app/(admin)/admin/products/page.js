@@ -22,7 +22,9 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { getProducts } from '@/lib/api'; // We can reuse our public API getter
+import { getAdminProducts } from '@/lib/api';
+import Image from 'next/image';
+import ProductCardSkeleton from '@/components/shop/ProductCardSkeleton';
 
 export default function AdminProductsPage() {
   const { token } = useAuthStore();
@@ -34,12 +36,19 @@ export default function AdminProductsPage() {
   useEffect(() => {
     const fetchProducts = async () => {
       setLoading(true);
-      const { products: fetchedProducts } = await getProducts();
-      setProducts(fetchedProducts || []);
-      setLoading(false);
+      try {
+        if (token) {
+          const productsArray = await getAdminProducts(token);
+          setProducts(productsArray);
+        }
+      } catch (error) {
+        toast.error("Failed to fetch products.");
+      } finally {
+        setLoading(false);
+      }
     };
     fetchProducts();
-  }, []);
+  }, [token]);
 
   const handleDelete = async () => {
     if (!productToDelete) return;
@@ -50,7 +59,7 @@ export default function AdminProductsPage() {
         headers: { 'Authorization': `Bearer ${token}` },
       });
       if (!response.ok) throw new Error('Failed to delete product.');
-      
+
       setProducts(products.filter(p => p._id !== productToDelete._id));
       toast.success('Product deleted successfully.');
     } catch (error) {
@@ -66,44 +75,43 @@ export default function AdminProductsPage() {
     setIsDialogOpen(true);
   };
 
-  if (loading) return <p className="text-center p-8">Loading products...</p>;
+  if (loading) return <p className="text-center p-8">
+    <ProductCardSkeleton />
+  </p>;
 
   return (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
       <div className="container mx-auto py-12">
-        {/* --- FIX: "ADD NEW PRODUCT" BUTTON RESTORED --- */}
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold">Manage Products</h1>
           <Button asChild>
             <Link href="/admin/products/new">Add New Product</Link>
           </Button>
         </div>
-        {/* --- END OF FIX --- */}
-        
         <div className="rounded-lg border">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Price</TableHead>
-                <TableHead>Total Stock</TableHead> {/* Updated label */}
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
+              <TableRow><TableHead>Image</TableHead><TableHead>Name</TableHead><TableHead>Category</TableHead><TableHead>Price</TableHead><TableHead>Total Stock</TableHead><TableHead className="text-right">Actions</TableHead></TableRow>
             </TableHeader>
             <TableBody>
               {products.map((product) => (
                 <TableRow key={product._id}>
-                  {/* --- FIX: ALL MISSING TABLECELLS RESTORED --- */}
+                  <TableCell className="font-medium">
+                    <Image
+                      src={product.images[0]}
+                      width={60}
+                      height={60}
+                      alt={product.name}
+                      priority
+                      className='rounded object-contain aspect-square'
+                    />
+                  </TableCell>
                   <TableCell className="font-medium">{product.name}</TableCell>
                   <TableCell>{product.category}</TableCell>
                   <TableCell>₹{product.price.toFixed(2)}</TableCell>
-                  {/* Calculate total stock from variants */}
                   <TableCell>
                     {product.variants.reduce((total, v) => total + v.stock, 0)}
                   </TableCell>
-                  {/* --- END OF FIX --- */}
-                  
                   <TableCell className="text-right space-x-2">
                     <Button asChild variant="outline" size="sm">
                       <Link href={`/admin/products/edit/${product._id}`}>Edit</Link>
@@ -129,7 +137,6 @@ export default function AdminProductsPage() {
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          {/* Also explicitly close dialog on cancel */}
           <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
           <Button variant="destructive" onClick={handleDelete}>Delete</Button>
         </DialogFooter>

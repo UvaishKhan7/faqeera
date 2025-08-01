@@ -3,9 +3,7 @@
 import { useCartStore } from '@/store/cart';
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { motion } from 'framer-motion'; // <-- IMPORT FRAMER MOTION
+import { motion } from 'framer-motion';
 import CheckoutForm from './CheckoutForm';
 
 // --- Reusable Skeleton Loader ---
@@ -43,7 +41,6 @@ export default function CheckoutPage() {
     return <CheckoutSkeleton />;
   }
 
-  // ... (Your empty cart logic is perfect and remains here)
   if (items.length === 0) { /* ... */ }
 
   // --- ANIMATION VARIANTS ---
@@ -58,7 +55,6 @@ export default function CheckoutPage() {
   };
   
   return (
-    // We wrap the entire page content in a motion.div
     <motion.div
       className="container mx-auto px-4 py-12"
       variants={containerVariants}

@@ -11,7 +11,9 @@ const PORT = process.env.PORT || 5001;
 connectDB();
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: process.env.CORS_ORIGIN
+}));
 app.use(express.json());
 
 // --- ROUTES ---
@@ -21,6 +23,7 @@ const userRoutes = require('./routes/user.routes');
 const orderRoutes = require('./routes/order.routes');
 const adminRoutes = require('./routes/admin.routes');
 const uploadRoutes = require('./routes/upload.routes'); 
+const siteContentRoutes = require('./routes/siteContent.routes');
 
 // Test Route
 app.get('/api', (req, res) => {
@@ -34,6 +37,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/content', siteContentRoutes);
 
 // --- ERROR HANDLING MIDDLEWARE ---
 const { notFound, errorHandler } = require('./middleware/error.middleware');

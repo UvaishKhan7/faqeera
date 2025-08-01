@@ -34,7 +34,7 @@ const ProductCard = ({ product, index }) => {
             </div>
             <div className="pt-4 text-left">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-medium text-gray-800">
+                <h3 className="text-sm font-medium text-gray-800 truncate">
                   {product.name}
                 </h3>
                 <Badge variant="secondary">{product.category}</Badge>
