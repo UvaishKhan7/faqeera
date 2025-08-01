@@ -1,6 +1,7 @@
 import { Suspense } from 'react';
 import ProductCardSkeleton from '@/components/shop/ProductCardSkeleton';
 import ProductFilters from '@/components/shop/ProductFilters';
+import ProductLoader from '@/components/shop/ProductLoader';
 
 // --- THE DEFINITIVE, FINAL FIX: FORCE DYNAMIC RENDERING ---
 export const dynamic = 'force-dynamic';
