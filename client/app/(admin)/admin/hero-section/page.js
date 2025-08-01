@@ -100,7 +100,7 @@ export default function AdminHeroSectionPage() {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Are you sure?</DialogTitle>
-          <DialogDescription>This action will permanently delete the slide titled "{slideToDelete?.title}".</DialogDescription>
+          <DialogDescription>This action will permanently delete the slide titled &quot;{slideToDelete?.title}&quot;.</DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>

@@ -133,7 +133,7 @@ export default function AdminProductsPage() {
           <DialogTitle>Are you absolutely sure?</DialogTitle>
           <DialogDescription>
             This action cannot be undone. This will permanently delete the product
-            "{productToDelete?.name}".
+            &quot;{productToDelete?.name}&quot;.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
