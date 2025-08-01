@@ -14,24 +14,12 @@ connectDB();
 const allowedOrigins = process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : [];
 
 const corsOptions = {
-  origin: (origin, callback) => {
-    // The '!origin' allows server-to-server requests and tools like Postman.
-    // The indexOf check is for browsers.
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      console.error(`CORS Error: Origin ${origin} not allowed.`);
-      callback(new Error('This origin is not allowed by CORS.'));
-    }
-  },
-  // We must also explicitly allow the methods and headers our frontend uses.
+  origin: allowedOrigins, 
   methods: 'GET, POST, PUT, DELETE, OPTIONS',
   allowedHeaders: 'Content-Type, Authorization',
   credentials: true,
+  optionsSuccessStatus: 200 
 };
-
-// First, handle preflight requests for all routes
-app.options('*', cors(corsOptions));
 
 // Then, use the CORS policy for all other requests
 app.use(cors(corsOptions));
