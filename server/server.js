@@ -11,30 +11,25 @@ const PORT = process.env.PORT || 5001;
 connectDB();
 
 // Get the allowed origins from your .env file. It will be a comma-separated string.
-const allowedOrigins = process.env.CORS_ORIGIN
+const allowedOrigins = process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : [];
 
 const corsOptions = {
   origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    // or if the origin is in our whitelist.
     if (!origin || allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
       callback(new Error('This origin is not allowed by CORS.'));
     }
   },
-  methods: 'GET,POST,PUT,DELETE,OPTIONS',
-  allowedHeaders: 'Content-Type,Authorization',
+  methods: 'GET, POST, PUT, DELETE, OPTIONS',
+  allowedHeaders: 'Content-Type, Authorization',
   credentials: true,
 };
 
 // CRITICAL: We enable the pre-flight request for all routes.
 // This is the step that was likely failing.
 app.options('*', cors(corsOptions));
-
-// Then apply the CORS middleware to all subsequent routes.
 app.use(cors(corsOptions));
-
 app.use(express.json());
 
 // --- ROUTES ---
@@ -43,7 +38,6 @@ const paymentRoutes = require('./routes/payment.routes');
 const userRoutes = require('./routes/user.routes');
 const orderRoutes = require('./routes/order.routes');
 const adminRoutes = require('./routes/admin.routes');
-const uploadRoutes = require('./routes/upload.routes');
 const siteContentRoutes = require('./routes/siteContent.routes');
 
 // Test Route
@@ -53,12 +47,10 @@ app.get('/api', (req, res) => {
 
 // requests
 app.use('/api/products', productRoutes);
-app.use('/api/payment', paymentRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/payment', paymentRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/admin', adminRoutes);
-
-app.use('/api/upload', uploadRoutes);
 app.use('/api/content', siteContentRoutes);
 
 // --- ERROR HANDLING MIDDLEWARE ---
