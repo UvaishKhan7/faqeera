@@ -1,14 +1,6 @@
 // This is the single source of truth for our backend URL.
 // It will use your .env.local value in development, and a different value in production.
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5001';
-
-/**
- * A centralized fetch function for all our API calls.
- * @param {string} path - The API path to fetch (e.g., '/products/slug/some-slug').
- * @param {object} options - Optional fetch options (method, headers, body, cache).
- * @returns {Promise<object>} - The JSON response from the API.
- * @throws {Error} - Throws an error if the fetch fails or response is not ok.
- */
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 async function fetchAPI(path, options = {}) {
   // Set default headers. More headers can be added from the options.
   const defaultHeaders = { 'Content-Type': 'application/json' };
