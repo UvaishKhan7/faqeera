@@ -10,7 +10,6 @@ import CartSheet from '@/components/shop/CartSheet';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
 import { Menu, X } from 'lucide-react';
-import SearchBox from '../shop/SearchBox';
 
 export default function Header() {
   const { user, logout } = useAuthStore();
@@ -23,7 +22,6 @@ export default function Header() {
     setIsMobileMenuOpen(false);
   };
 
-  // This component will now correctly render different links for mobile and desktop
   const NavLinks = ({ isMobile = false }) => {
     if (isMobile) {
       // --- MOBILE-ONLY LINKS ---
@@ -113,11 +111,6 @@ export default function Header() {
         <Link href="/" className="flex items-center">
           <Image src="/faqeera.svg" width={120} height={50} alt="Faqeera Logo" />
         </Link>
-
-        {/* Search Box - Centered */}
-        <div className="flex-1 flex justify-center">
-          <SearchBox />
-        </div>
 
         <div className="flex items-center gap-4">
         {/* Desktop Navigation */}
