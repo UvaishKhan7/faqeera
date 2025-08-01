@@ -8,7 +8,6 @@ import DynamicHeroSection from '@/components/layout/DynamicHeroSection';
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage({ searchParams }) {
-  const suspenseKey = JSON.stringify(searchParams);
   const { products } = await getPublicProducts(searchParams);
 
   return (
