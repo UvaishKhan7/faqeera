@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import ProductForm from '../../ProductForm';
-import { useAuthStore } from '@/store/auth';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { useSession } from 'next-auth/react';
 
 // A new function to get a single product by ID
 async function getProduct(id) {
@@ -20,37 +20,32 @@ async function getProduct(id) {
 
 export default function EditProductPage({ params }) {
   const { id } = params;
-  const { token } = useAuthStore();
   const router = useRouter();
-  
+  const { data: session, status } = useSession();
+
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isClient, setIsClient] = useState(false);
 
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
+  // Wait for session to load
+  const isLoadingSession = status === 'loading';
 
-
-  // Using useCallback to memoize the function
   const fetchProduct = useCallback(async () => {
     setLoading(true);
     const data = await getProduct(id);
     if (data) {
       setProduct(data);
     } else {
-      // If product not found, redirect
       router.push('/admin/products');
     }
     setLoading(false);
   }, [id, router]);
 
   useEffect(() => {
-    if (isClient) {
+    if (!isLoadingSession && session) {
       fetchProduct();
     }
-  }, [isClient, fetchProduct]);
+  }, [isLoadingSession, session, fetchProduct]);
 
   const handleUpdateProduct = async (values) => {
     setIsSubmitting(true);
@@ -59,7 +54,7 @@ export default function EditProductPage({ params }) {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${session?.user?.token}`, // <- assuming token is included in session.user
         },
         body: JSON.stringify(values),
       });
@@ -68,7 +63,7 @@ export default function EditProductPage({ params }) {
 
       toast.success('Product updated successfully!');
       router.push('/admin/products');
-      router.refresh(); 
+      router.refresh();
     } catch (error) {
       toast.error(error.message);
     } finally {
@@ -76,20 +71,24 @@ export default function EditProductPage({ params }) {
     }
   };
 
-  if (!isClient || loading) {
+  if (isLoadingSession || loading) {
     return <p className="text-center p-8">Loading product details...</p>;
+  }
+
+  if (!session) {
+    return <p className="text-center p-8 text-red-500">You must be logged in to edit products.</p>;
   }
 
   return (
     <div className="container mx-auto py-12">
       {product ? (
-        <ProductForm 
-          onSubmit={handleUpdateProduct} 
-          product={product} 
+        <ProductForm
+          onSubmit={handleUpdateProduct}
+          product={product}
           isSubmitting={isSubmitting}
         />
       ) : (
-         <p>Product data could not be loaded.</p>
+        <p>Product data could not be loaded.</p>
       )}
     </div>
   );

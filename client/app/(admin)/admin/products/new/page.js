@@ -1,14 +1,15 @@
 'use client';
 
 import ProductForm from '../ProductForm';
-import { useAuthStore } from '@/store/auth';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+import { Progress } from '@radix-ui/react-progress';
 
 export default function NewProductPage() {
-  const { token } = useAuthStore();
   const router = useRouter();
+  const { data: session, status } = useSession();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isClient, setIsClient] = useState(false);
 
@@ -23,7 +24,7 @@ export default function NewProductPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${session?.user?.token}`, // token from session
         },
         body: JSON.stringify(values),
       });
@@ -32,7 +33,7 @@ export default function NewProductPage() {
 
       toast.success('Product created successfully!');
       router.push('/admin/products');
-      router.refresh(); // Important to refresh the product list page
+      router.refresh();
     } catch (error) {
       toast.error(error.message);
     } finally {
@@ -40,15 +41,19 @@ export default function NewProductPage() {
     }
   };
 
+  if (status === 'loading' || !isClient) {
+    return <Progress />;
+  }
+
+  if (!session) {
+    toast.error('Unauthorized. Please login as admin.');
+    router.push('/login');
+    return null;
+  }
+
   return (
     <div className="container mx-auto py-12">
-      {/* NEW: Conditional rendering */}
-      {isClient ? (
-        <ProductForm onSubmit={handleCreateProduct} isSubmitting={isSubmitting} />
-      ) : (
-        // You can show a skeleton/loader here while waiting for the client to mount
-        <p>Loading form...</p>
-      )}
+      <ProductForm onSubmit={handleCreateProduct} isSubmitting={isSubmitting} />
     </div>
   );
 }
