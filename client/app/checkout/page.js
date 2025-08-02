@@ -33,7 +33,7 @@ export default function CheckoutPage() {
   }, []);
 
   const subtotal = items.reduce((total, item) => total + item.price * item.quantity, 0);
-  const shipping = subtotal < 500 ? (subtotal > 0 ? 1.00 : 0) : 0;
+  const shipping = subtotal < 500 ? (subtotal > 0 ? 50.00 : 0) : 0;
   const total = subtotal + shipping;
   
   // --- USE THE SKELETON LOADER ---
@@ -94,7 +94,7 @@ export default function CheckoutPage() {
           </div>
           <div className="border-t my-6"></div>
           <div className="space-y-2">
-            <div className="flex justify-between"><p>Subtotal</p><p>₹{subtotal.toFixed(2)}</p></div>
+            <div className="flex justify-between"><p>Total MRP</p><p>₹{subtotal.toFixed(2)}</p></div>
             <div className="flex justify-between"><p>Shipping</p><p>₹{shipping.toFixed(2)}</p></div>
           </div>
           <div className="border-t my-6"></div>

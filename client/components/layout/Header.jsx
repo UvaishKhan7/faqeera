@@ -4,128 +4,118 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-
-import { useAuthStore } from '@/store/auth';
+import { signOut, useSession } from 'next-auth/react';
+import { Menu, X, UserCircle, LogOut, LayoutDashboard } from 'lucide-react';
 import CartSheet from '@/components/shop/CartSheet';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
-import { Menu, X } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
+import SearchBox from '../shop/SearchBox';
 
 export default function Header() {
-  const { user, logout } = useAuthStore();
+  const { data: session } = useSession();
+  const user = session?.user;
   const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const handleLogout = () => {
-    logout();
-    router.push('/');
-    setIsMobileMenuOpen(false);
-  };
-
-  const NavLinks = ({ isMobile = false }) => {
-    if (isMobile) {
-      // --- MOBILE-ONLY LINKS ---
-      return (
-        <div className="flex flex-col space-y-4">
-          {user ? (
-            <>
-              <Link href="/account" className="block py-3 text-lg" onClick={() => setIsMobileMenuOpen(false)}>
-                My Account
-              </Link>
-              {user.isAdmin && (
-                <>
-                  <Link href="/admin/orders" className="block py-3 text-lg" onClick={() => setIsMobileMenuOpen(false)}>
-                    Manage Orders
-                  </Link>
-                  <Link href="/admin/products" className="block py-3 text-lg" onClick={() => setIsMobileMenuOpen(false)}>
-                    Manage Products
-                  </Link>
-                  <Link href="/admin/hero-section" className="..." onClick={() => setIsMobileMenuOpen(false)}>
-                    Manage Hero
-                  </Link>
-                </>
-              )}
-              <div className="pt-4">
-                <Button variant="destructive" onClick={handleLogout} className="w-full">
-                  Logout
-                </Button>
-              </div>
-            </>
-          ) : (
-            <>
-              <Button asChild variant="ghost" className="w-full justify-start py-6 text-lg">
-                <Link href="/login" onClick={() => setIsMobileMenuOpen(false)}>Log In</Link>
-              </Button>
-              <Button asChild className="w-full text-lg">
-                <Link href="/register" onClick={() => setIsMobileMenuOpen(false)}>Sign Up</Link>
-              </Button>
-            </>
+  const MobileNavContent = () => (
+    <div className="mt-20">
+      {user ? (
+        <div className="space-y-3">
+          <div className="mb-4 border-b pb-4">
+            <p className="text-lg font-semibold">Hi! {user.name}</p>
+            <p className="text-sm text-muted-foreground">{user.email}</p>
+          </div>
+          <Link className="flex items-center gap-2 py-3 text-lg" href="/account" onClick={() => setIsMobileMenuOpen(false)}>
+            <UserCircle className="w-5 h-5" />My Account
+          </Link>
+          {user.isAdmin && (
+            <Link className="flex items-center gap-2 py-3 text-lg" href="/admin" onClick={() => setIsMobileMenuOpen(false)}>
+              <LayoutDashboard className="h-5 w-5" />Admin Dashboard
+            </Link>
           )}
+          <div className="pt-4">
+            <Button variant="destructive" onClick={() => signOut()} className="w-full flex gap-2">
+              <LogOut className="h-5 w-5" />Logout
+            </Button>
+          </div>
         </div>
-      );
-    }
-
-    // --- DESKTOP-ONLY LINKS ---
-    return (
-      <div className="flex items-center space-x-4">
-        {user ? (
-          <>
-            {user.isAdmin && (
-              <>
-                <Button asChild variant="ghost">
-                  <Link href="/admin/orders">Manage Orders</Link>
-                </Button>
-                <Button asChild variant="ghost">
-                  <Link href="/admin/products">Manage Products</Link>
-                </Button>
-                <Button asChild variant="outline">
-                  <Link href="/admin/hero-section">Manage Hero</Link>
-                </Button>
-              </>
-            )}
-            <Button asChild variant="ghost">
-              <Link href="/account">My Account</Link>
-            </Button>
-            <Button variant="outline" onClick={handleLogout}>
-              Logout
-            </Button>
-          </>
-        ) : (
-          <>
-            <Button asChild variant="ghost">
-              <Link href="/login">Log In</Link>
-            </Button>
-            <Button asChild>
-              <Link href="/register">Sign Up</Link>
-            </Button>
-          </>
-        )}
-      </div>
-    );
-  };
+      ) : (
+        <div className="space-y-4">
+          <Button asChild className="w-full text-lg">
+            <Link href="/register" onClick={() => setIsMobileMenuOpen(false)}>Sign Up</Link>
+          </Button>
+          <Button asChild variant="ghost" className="w-full justify-start py-6 text-lg">
+            <Link href="/login" onClick={() => setIsMobileMenuOpen(false)}>Log In</Link>
+          </Button>
+        </div>
+      )}
+    </div>
+  );
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background rounded-b-4xl">
-      <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        {/* Logo */}
-        <Link href="/" className="flex items-center">
-          <Image src="/faqeera.svg" width={120} height={50} alt="Faqeera Logo" />
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/90">
+      <div className="container mx-auto flex h-16 items-center justify-between gap-4 px-4">
+        <Link href="/" className="flex items-center shrink-0">
+          <Image src="/faqeera.svg" width={120} height={50} alt="Faqeera_logo" priority />
         </Link>
 
-        <div className="flex items-center gap-4">
-        {/* Desktop Navigation */}
-        <div className="hidden md:flex">
-          <NavLinks />
+        <div className="hidden sm:flex flex-1 justify-center max-w-md">
+          <SearchBox />
         </div>
 
-        {/* Mobile-Right Aligned Icons */}
+        <div className="flex items-center gap-2 md:gap-4">
+          {/* --- Desktop View --- */}
+          <div className="hidden md:flex items-center gap-2">
+            {session ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline">
+                    Hi! {user.name}
+                    <UserCircle className="h-6 w-6 ml-2" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end" forceMount>
+                  <DropdownMenuItem onClick={() => router.push('/account')}>
+                    <UserCircle className="mr-2 h-4 w-4" />
+                    <span>My Account</span>
+                  </DropdownMenuItem>
+                  {user.isAdmin && (
+                    <DropdownMenuItem onClick={() => router.push('/admin')}>
+                      <LayoutDashboard className="mr-2 h-4 w-4" />
+                      <span>Admin Dashboard</span>
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => signOut()} className="text-destructive focus:text-destructive">
+                    <LogOut className="mr-2 h-4 w-4 text-destructive" />
+                    <span>Log out</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <>
+                <Button asChild variant="ghost"><Link href="/login">Log In</Link></Button>
+                <Button asChild><Link href="/register">Sign Up</Link></Button>
+              </>
+            )}
+          </div>
+
           <CartSheet />
+
+          {/* --- Mobile View --- */}
           <div className="md:hidden">
             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
               <SheetTrigger asChild>
-                <Button variant="outline" size="icon">
-                  <Menu className="h-6 w-6" />
-                </Button>
+                {user ? (
+                  <Button variant="outline" className="relative h-9 w-9">
+                    <UserCircle className="h-6 w-6" />
+                  </Button>
+                ) : (
+                  <Button variant="outline" size="icon">
+                    <Menu className="h-6 w-6" />
+                  </Button>
+                )}
               </SheetTrigger>
               <SheetContent side="right" className="p-6">
                 <SheetClose asChild>
@@ -133,15 +123,7 @@ export default function Header() {
                     <X className="h-6 w-6" />
                   </Button>
                 </SheetClose>
-                <div className="mt-20">
-                  {user && (
-                    <div className="mb-4 border-b pb-4">
-                      <p className="text-lg font-semibold">{user.name}</p>
-                      <p className="text-sm text-muted-foreground">{user.email}</p>
-                    </div>
-                  )}
-                  <NavLinks isMobile={true} />
-                </div>
+                <MobileNavContent />
               </SheetContent>
             </Sheet>
           </div>

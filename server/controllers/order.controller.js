@@ -5,15 +5,26 @@ const Order = require('../models/order.model');
 // @route   GET /api/orders/myorders
 // @access  Private
 const getMyOrders = asyncHandler(async (req, res) => {
-  // We use asyncHandler to automatically catch any errors and pass them
-  // to our centralized error handler.
-  
-  // The query logic is correct: find all orders where the userId matches the
-  // ID of the logged-in user (provided by the 'protect' middleware).
-  const orders = await Order.find({ userId: req.user._id }).populate('userId', 'name email').sort({ createdAt: -1 });
-  
-  // Send the found orders back as JSON.
-  res.json(orders);
+  const orders = await Order.find({ userId: req.user._id })
+    .populate('userId', 'name email')
+    .sort({ createdAt: -1 });
+
+  // Convert each order document to a plain JS object
+  const sanitizedOrders = orders.map(order => {
+    const obj = order.toObject();
+    return {
+      _id: obj._id,
+      userId: obj.userId, // already populated as plain object (name, email)
+      items: obj.items,
+      totalAmount: obj.totalAmount,
+      status: obj.status,
+      createdAt: obj.createdAt,
+      updatedAt: obj.updatedAt,
+      // Include any other fields you want to expose
+    };
+  });
+
+  res.json(sanitizedOrders);
 });
 
 module.exports = { getMyOrders };

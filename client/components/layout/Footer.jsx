@@ -17,7 +17,7 @@ export default function Footer() {
           {/* Column 1: Brand & Mission */}
           <div className="md:col-span-2 lg:col-span-1">
             <Link href="/" className="inline-block mb-4">
-              <Image src="/faqeera.svg" width={120} height={50} alt="Faqeera Logo" />
+              <Image src="/faqeera.svg" width={120} height={50} alt="Faqeera Logo" priority />
             </Link>
             <p className="text-muted-foreground text-sm max-w-xs">
               Elegance in every thread. Discover curated collections that define your style with uncompromising quality.

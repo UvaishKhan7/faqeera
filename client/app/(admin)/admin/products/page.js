@@ -1,33 +1,23 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAuthStore } from '@/store/auth';
+import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+  Dialog, DialogContent, DialogDescription,
+  DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { getAdminProducts } from '@/lib/api';
 import Image from 'next/image';
 import ProductCardSkeleton from '@/components/shop/ProductCardSkeleton';
 
 export default function AdminProductsPage() {
-  const { token } = useAuthStore();
+  const { data: session, status } = useSession();
+  const token = session?.user?.token;
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [productToDelete, setProductToDelete] = useState(null);
@@ -38,7 +28,11 @@ export default function AdminProductsPage() {
       setLoading(true);
       try {
         if (token) {
-          const productsArray = await getAdminProducts(token);
+          const res = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/admin/products`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (!res.ok) throw new Error('Failed to fetch products.');
+          const productsArray = await res.json();
           setProducts(productsArray);
         }
       } catch (error) {
@@ -47,19 +41,19 @@ export default function AdminProductsPage() {
         setLoading(false);
       }
     };
-    fetchProducts();
+
+    if (token) fetchProducts();
   }, [token]);
 
   const handleDelete = async () => {
     if (!productToDelete) return;
 
     try {
-      const response = await fetch(`/api/admin/products/${productToDelete._id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/admin/products/${productToDelete._id}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${token}` },
       });
-      if (!response.ok) throw new Error('Failed to delete product.');
-
+      if (!res.ok) throw new Error('Failed to delete product.');
       setProducts(products.filter(p => p._id !== productToDelete._id));
       toast.success('Product deleted successfully.');
     } catch (error) {
@@ -75,9 +69,9 @@ export default function AdminProductsPage() {
     setIsDialogOpen(true);
   };
 
-  if (loading) return <p className="text-center p-8">
-    <ProductCardSkeleton />
-  </p>;
+  if (loading || status === 'loading') return (
+    <p className="text-center p-8"><ProductCardSkeleton /></p>
+  );
 
   return (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -91,7 +85,14 @@ export default function AdminProductsPage() {
         <div className="rounded-lg border">
           <Table>
             <TableHeader>
-              <TableRow><TableHead>Image</TableHead><TableHead>Name</TableHead><TableHead>Category</TableHead><TableHead>Price</TableHead><TableHead>Total Stock</TableHead><TableHead className="text-right">Actions</TableHead></TableRow>
+              <TableRow>
+                <TableHead>Image</TableHead>
+                <TableHead>Name</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead>Price</TableHead>
+                <TableHead>Total Stock</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
             </TableHeader>
             <TableBody>
               {products.map((product) => (
@@ -109,9 +110,7 @@ export default function AdminProductsPage() {
                   <TableCell className="font-medium">{product.name}</TableCell>
                   <TableCell>{product.category}</TableCell>
                   <TableCell>₹{product.price.toFixed(2)}</TableCell>
-                  <TableCell>
-                    {product.variants.reduce((total, v) => total + v.stock, 0)}
-                  </TableCell>
+                  <TableCell>{product.variants.reduce((total, v) => total + v.stock, 0)}</TableCell>
                   <TableCell className="text-right space-x-2">
                     <Button asChild variant="outline" size="sm">
                       <Link href={`/admin/products/edit/${product._id}`}>Edit</Link>
@@ -132,8 +131,7 @@ export default function AdminProductsPage() {
         <DialogHeader>
           <DialogTitle>Are you absolutely sure?</DialogTitle>
           <DialogDescription>
-            This action cannot be undone. This will permanently delete the product
-            &quot;{productToDelete?.name}&quot;.
+            This will permanently delete the product &quot;{productToDelete?.name}&quot;.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>

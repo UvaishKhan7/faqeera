@@ -1,14 +1,15 @@
-'use client';
+"use client";
 
-import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { useCallback } from 'react';
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { useCallback } from "react";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
+import { useDebouncedCallback } from "use-debounce";
 
 export default function ProductFilters() {
   const router = useRouter();
@@ -28,23 +29,31 @@ export default function ProductFilters() {
     },
     [searchParams]
   );
-  
+
+  const debouncedFilterChange = useDebouncedCallback((filterName, value) => {
+    router.push(pathname + "?" + createQueryString(filterName, value), {
+      scroll: false,
+    });
+  }, 300);
+
   const handleFilterChange = (filterName, filterValue) => {
-    // If user selects "All", we pass an empty value to remove the param
-    const value = filterValue === 'all' ? '' : filterValue;
-    router.push(pathname + '?' + createQueryString(filterName, value));
+    const value = filterValue === "all" ? "" : filterValue;
+    debouncedFilterChange(filterName, value);
   };
 
   return (
     <div className="flex flex-col sm:flex-row gap-4 mb-8">
       {/* Category Filter */}
       <div className="flex-1">
-        <label htmlFor="category" className="block text-sm font-medium text-muted-foreground mb-1">
+        <label
+          htmlFor="category"
+          className="block text-sm font-medium text-muted-foreground mb-1"
+        >
           Category
         </label>
         <Select
-          defaultValue={searchParams.get('category') || 'all'}
-          onValueChange={(value) => handleFilterChange('category', value)}
+          defaultValue={searchParams.get("category") || "all"}
+          onValueChange={(value) => handleFilterChange("category", value)}
         >
           <SelectTrigger id="category">
             <SelectValue placeholder="Filter by category" />
@@ -61,12 +70,15 @@ export default function ProductFilters() {
 
       {/* Sorting Options */}
       <div className="flex-1">
-        <label htmlFor="sort" className="block text-sm font-medium text-muted-foreground mb-1">
+        <label
+          htmlFor="sort"
+          className="block text-sm font-medium text-muted-foreground mb-1"
+        >
           Sort by
         </label>
         <Select
-          defaultValue={searchParams.get('sortBy') || 'newest'}
-          onValueChange={(value) => handleFilterChange('sortBy', value)}
+          defaultValue={searchParams.get("sortBy") || "newest"}
+          onValueChange={(value) => handleFilterChange("sortBy", value)}
         >
           <SelectTrigger id="sort">
             <SelectValue placeholder="Sort products" />

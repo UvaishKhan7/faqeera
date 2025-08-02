@@ -14,10 +14,10 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useAuthStore } from '@/store/auth';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { registerUser } from '@/lib/api';
+import { signIn } from 'next-auth/react';
 
 const formSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
@@ -26,7 +26,6 @@ const formSchema = z.object({
 });
 
 export default function RegisterPage() {
-  const { login } = useAuthStore();
   const router = useRouter();
 
   const form = useForm({
@@ -36,9 +35,21 @@ export default function RegisterPage() {
 
   const onSubmit = async (values) => {
     try {
-      const data = await registerUser(values);
-      
-      login(data);
+      // Call your backend to register the user
+      await registerUser(values);
+
+      // Automatically log in after registration
+      const signInRes = await signIn('credentials', {
+        redirect: false,
+        email: values.email,
+        password: values.password,
+      });
+
+      if (!signInRes.ok) {
+        // If auto-login fails, send them to the login page with an error.
+        throw new Error(signInRes.error || "Registration succeeded, but auto-login failed. Please log in manually.");
+      }
+
       toast.success('Registration successful! Welcome.');
       router.push('/');
     } catch (error) {
@@ -47,38 +58,16 @@ export default function RegisterPage() {
   };
 
   return (
-   <div className="container flex items-center justify-center py-24">
+    <div className="container flex items-center justify-center py-24">
       <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-2xl">Create an Account</CardTitle>
-        </CardHeader>
+        <CardHeader><CardTitle className="text-2xl">Create an Account</CardTitle></CardHeader>
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <FormField name="name" control={form.control} render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Name</FormLabel>
-                  <FormControl><Input placeholder="Your Name" {...field} /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
-              <FormField name="email" control={form.control} render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl><Input type="email" placeholder="you@example.com" {...field} /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
-              <FormField name="password" control={form.control} render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Password</FormLabel>
-                  <FormControl><Input type="password" placeholder="••••••••" {...field} /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
-              <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting ? 'Registering...' : 'Register'}
-              </Button>
+              <FormField name="name" control={form.control} render={({ field }) => (<FormItem><FormLabel>Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+              <FormField name="email" control={form.control} render={({ field }) => (<FormItem><FormLabel>Email</FormLabel><FormControl><Input type="email" {...field} /></FormControl><FormMessage /></FormItem>)} />
+              <FormField name="password" control={form.control} render={({ field }) => (<FormItem><FormLabel>Password</FormLabel><FormControl><Input type="password" {...field} /></FormControl><FormMessage /></FormItem>)} />
+              <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>{form.formState.isSubmitting ? 'Creating Account...' : 'Register'}</Button>
             </form>
           </Form>
         </CardContent>

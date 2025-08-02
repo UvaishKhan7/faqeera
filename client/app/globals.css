@@ -118,3 +118,35 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Add these new animation keyframes */
+@keyframes keyframes-svg-filled {
+  0% { transform: scale(0); }
+  25% { transform: scale(1.2); }
+  50% { transform: scale(1); filter: brightness(1.5); }
+}
+
+@keyframes keyframes-svg-celebrate {
+  0% { transform: scale(0); }
+  50% { opacity: 1; filter: brightness(1.5); }
+  100% { transform: scale(1.4); opacity: 0; display: none; }
+}
+
+/* This is how we give Tailwind a name for these animations */
+.animate-svg-filled {
+  animation: keyframes-svg-filled 1s;
+}
+
+.animate-svg-celebrate {
+  animation: keyframes-svg-celebrate 0.5s forwards;
+}
+
+/* We will use a group and a peer selector to trigger the animation */
+/* When the hidden checkbox (peer) is checked, show these elements */
+.peer:checked ~ .svg-container .svg-filled {
+  display: block;
+}
+
+.peer:checked ~ .svg-container .svg-celebrate {
+  display: block;
+}

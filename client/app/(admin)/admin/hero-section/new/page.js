@@ -1,29 +1,31 @@
 'use client';
 
 import { useState } from 'react';
-import { useAuthStore } from '@/store/auth';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import SlideForm from '../SlideForm';
+import { useSession } from 'next-auth/react';
 
 export default function NewSlidePage() {
+  const { data: session, status } = useSession();
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleCreateSlide = async (values) => {
     setIsSubmitting(true);
-    const token = useAuthStore.getState().token;
-    if (!token) {
-      toast.error('Authentication error. Please refresh and log in again.');
+
+    if (status === 'unauthenticated' || !session?.user?.accessToken) {
+      toast.error('Authentication error. Please log in again.');
       setIsSubmitting(false);
       return;
     }
+
     try {
-      const response = await fetch('/api/admin/hero-slides', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/hero-slides`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${session.user.accessToken}`,
         },
         body: JSON.stringify(values),
       });
@@ -35,7 +37,7 @@ export default function NewSlidePage() {
 
       toast.success('New hero slide created successfully!');
       router.push('/admin/hero-section');
-      router.refresh(); // Tells Next.js to re-fetch the slide list on the previous page
+      router.refresh();
     } catch (error) {
       toast.error(error.message);
     } finally {

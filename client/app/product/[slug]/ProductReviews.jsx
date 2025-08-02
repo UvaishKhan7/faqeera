@@ -1,12 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { useAuthStore } from '@/store/auth';
+import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
+
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -19,7 +20,7 @@ const reviewSchema = z.object({
 });
 
 export default function ProductReviews({ product }) {
-  const { user, token } = useAuthStore();
+  const { data: session } = useSession();
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -33,17 +34,15 @@ export default function ProductReviews({ product }) {
     try {
       const response = await fetch(`/api/products/${product._id}/reviews`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(values),
       });
+
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || 'Failed to submit review.');
 
       toast.success('Review submitted successfully!');
-      router.refresh(); // Refresh the page to show the new review
+      router.refresh();
     } catch (error) {
       toast.error(error.message);
     } finally {
@@ -60,7 +59,7 @@ export default function ProductReviews({ product }) {
           <Card>
             <CardHeader><CardTitle>Write a Review</CardTitle></CardHeader>
             <CardContent>
-              {user ? (
+              {session?.user ? (
                 <Form {...form}>
                   <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                     <FormField name="rating" control={form.control} render={({ field }) => (
@@ -80,7 +79,9 @@ export default function ProductReviews({ product }) {
                     <FormField name="comment" control={form.control} render={({ field }) => (
                       <FormItem>
                         <FormLabel>Your Comment</FormLabel>
-                        <FormControl><Textarea placeholder="Tell us what you think..." {...field} /></FormControl>
+                        <FormControl>
+                          <Textarea placeholder="Tell us what you think..." {...field} />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )} />
@@ -95,6 +96,7 @@ export default function ProductReviews({ product }) {
             </CardContent>
           </Card>
         </div>
+
         {/* Existing Reviews Section */}
         <div className="space-y-6">
           {product.reviews.length === 0 ? (
@@ -110,7 +112,9 @@ export default function ProductReviews({ product }) {
                   />
                   <p className="ml-4 font-semibold">{review.name}</p>
                 </div>
-                <p className="text-sm text-muted-foreground mb-1">{new Date(review.createdAt).toLocaleDateString()}</p>
+                <p className="text-sm text-muted-foreground mb-1">
+                  {new Date(review.createdAt).toLocaleDateString()}
+                </p>
                 <p>{review.comment}</p>
               </div>
             ))

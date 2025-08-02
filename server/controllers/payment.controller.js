@@ -4,6 +4,7 @@ const crypto = require('crypto');
 const Order = require('../models/order.model');
 const { sendOrderConfirmationEmail } = require('../utils/sendEmail');
 
+// Initialize Razorpay instance
 const instance = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
   key_secret: process.env.RAZORPAY_KEY_SECRET,
@@ -12,8 +13,9 @@ const instance = new Razorpay({
 // @desc    Create a Razorpay order
 const createOrder = asyncHandler(async (req, res) => {
   const { amount, currency = 'INR' } = req.body;
+
   const options = {
-    amount: amount * 100,
+    amount: amount * 100, // amount in paisa
     currency,
     receipt: `receipt_order_${new Date().getTime()}`,
   };
@@ -31,6 +33,7 @@ const createOrder = asyncHandler(async (req, res) => {
 // @desc    Verify the payment signature and save the order
 const verifyPayment = asyncHandler(async (req, res) => {
   console.log("VERIFYING PAYMENT. REQUEST BODY:", req.body);
+  
   const {
     razorpay_order_id,
     razorpay_payment_id,
@@ -45,8 +48,7 @@ const verifyPayment = asyncHandler(async (req, res) => {
     .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
     .update(stringToSign.toString())
     .digest("hex");
-  
-  // Securely compare the two signatures
+
   const isSignatureValid = expectedSignature === razorpay_signature;
 
   if (!isSignatureValid) {
@@ -54,13 +56,10 @@ const verifyPayment = asyncHandler(async (req, res) => {
     throw new Error('Payment verification failed. Signature mismatch.');
   }
 
-  // If the signature IS valid, we know the payment was successful.
-  // We can now trust the data and proceed to create our order in the database.
+  // Create order in DB
   const newOrder = new Order({
-    // We now use the user's ID from the `protect` middleware for security
-    userId: req.user._id, 
+    userId: req.user._id,
     products: cartItems.map((item) => ({
-      // Ensure we use the correct productId from the cart item
       productId: item.productId,
       name: item.name,
       quantity: item.quantity,
@@ -74,22 +73,28 @@ const verifyPayment = asyncHandler(async (req, res) => {
       razorpay_payment_id,
       razorpay_signature,
     },
-    status: 'Processing',
   });
-  
+
   const savedOrder = await newOrder.save();
 
-  // Send the confirmation email
+  // Convert to plain object to avoid serialization issues
+  const plainOrder = savedOrder.toObject();
+
+  // Send confirmation email
   try {
     if (req.user && req.user.email) {
-      await sendOrderConfirmationEmail(req.user.email, savedOrder);
+      await sendOrderConfirmationEmail(req.user.email, plainOrder);
     }
   } catch (emailError) {
     console.error("Non-critical error: Failed to send email after saving order:", emailError);
   }
 
-  // Respond with success
-  res.status(200).json({ status: 'success', orderNumber: savedOrder.orderNumber, paymentId: savedOrder.paymentDetails.razorpay_payment_id });
+  // Respond with only necessary info (avoid returning entire Mongoose doc)
+  res.status(200).json({
+    status: 'success',
+    orderNumber: plainOrder.orderNumber,
+    paymentId: plainOrder.paymentDetails.razorpay_payment_id,
+  });
 });
 
 module.exports = { createOrder, verifyPayment };

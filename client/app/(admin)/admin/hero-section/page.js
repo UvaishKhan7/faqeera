@@ -1,65 +1,95 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useAuthStore } from '@/store/auth';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow
 } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter,
+  DialogHeader, DialogTitle, DialogTrigger
+} from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
 
 export default function AdminHeroSectionPage() {
-  const { token } = useAuthStore();
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
   const [slides, setSlides] = useState([]);
   const [loading, setLoading] = useState(true);
   const [slideToDelete, setSlideToDelete] = useState(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
+  const user = session?.user;
+
+  useEffect(() => {
+    if (status === 'loading') return;
+    if (!user || !user.isAdmin) {
+      router.push('/');
+    }
+  }, [status, user, router]);
+
   useEffect(() => {
     const fetchSlides = async () => {
-      setLoading(true);
       try {
-        const response = await fetch('/api/admin/hero-slides', { headers: { Authorization: `Bearer ${token}` } });
-        if (!response.ok) throw new Error('Failed to fetch slides.');
-        const data = await response.json();
+        setLoading(true);
+        const res = await fetch('/api/admin/hero-slides', {
+          headers: {
+            Authorization: `Bearer ${session?.token}`
+          }
+        });
+        if (!res.ok) throw new Error('Failed to fetch slides');
+        const data = await res.json();
         setSlides(data);
-      } catch (error) {
-        toast.error(error.message);
+      } catch (err) {
+        toast.error(err.message || 'Something went wrong');
       } finally {
         setLoading(false);
       }
     };
-    if (token) fetchSlides();
-  }, [token]);
+
+    if (session?.token && user?.isAdmin) {
+      fetchSlides();
+    }
+  }, [session?.token, user]);
 
   const handleDelete = async () => {
     if (!slideToDelete) return;
     try {
-      await fetch(`/api/admin/hero-slides/${slideToDelete._id}`, {
-        method: 'DELETE', headers: { Authorization: `Bearer ${token}` },
+      const res = await fetch(`/api/admin/hero-slides/${slideToDelete._id}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${session?.token}`
+        }
       });
-      setSlides(slides.filter(s => s._id !== slideToDelete._id));
-      toast.success('Slide deleted successfully.');
-    } catch (error) {
-      toast.error('Failed to delete slide.');
+      if (!res.ok) throw new Error('Failed to delete slide');
+      setSlides(prev => prev.filter(s => s._id !== slideToDelete._id));
+      toast.success('Slide deleted successfully');
+    } catch (err) {
+      toast.error(err.message || 'Error deleting slide');
     } finally {
       setIsDialogOpen(false);
       setSlideToDelete(null);
     }
   };
 
-  if (loading) return <p className="text-center p-8">Loading slides...</p>;
+  if (status === 'loading' || loading) {
+    return <p className="text-center p-8">Loading slides...</p>;
+  }
 
   return (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
       <div className="container mx-auto py-12">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold">Manage Hero Section</h1>
-          <Button asChild><Link href="/admin/hero-section/new">Add New Slide</Link></Button>
+          <Button asChild>
+            <Link href="/admin/hero-section/new">Add New Slide</Link>
+          </Button>
         </div>
         <div className="rounded-lg border">
           <Table>
@@ -86,7 +116,9 @@ export default function AdminHeroSectionPage() {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right space-x-2">
-                    <Button asChild variant="outline" size="sm"><Link href={`/admin/hero-section/edit/${slide._id}`}>Edit</Link></Button>
+                    <Button asChild variant="outline" size="sm">
+                      <Link href={`/admin/hero-section/edit/${slide._id}`}>Edit</Link>
+                    </Button>
                     <DialogTrigger asChild>
                       <Button variant="destructive" size="sm" onClick={() => setSlideToDelete(slide)}>Delete</Button>
                     </DialogTrigger>
@@ -100,7 +132,9 @@ export default function AdminHeroSectionPage() {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Are you sure?</DialogTitle>
-          <DialogDescription>This action will permanently delete the slide titled &quot;{slideToDelete?.title}&quot;.</DialogDescription>
+          <DialogDescription>
+            This action will permanently delete the slide titled &quot;{slideToDelete?.title}&quot;.
+          </DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>

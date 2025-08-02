@@ -3,7 +3,6 @@ const router = express.Router();
 
 const { 
   getOrders, 
-  updateOrderStatus,
   getAllProducts,
   createProduct,
   updateProduct,
@@ -12,7 +11,8 @@ const {
   getHeroSlideById, 
   createHeroSlide, 
   updateHeroSlide, 
-  deleteHeroSlide
+  deleteHeroSlide,
+  updateOrderItemStatus
 } = require('../controllers/admin.controller');
 
 const { generateUploadSignature } = require('../controllers/upload.controller');
@@ -20,7 +20,7 @@ const { protect, admin } = require('../middleware/auth.middleware');
 
 // Order Routes
 router.route('/orders').get(protect, admin, getOrders);
-router.route('/orders/:id').put(protect, admin, updateOrderStatus);
+router.route('/orders/:orderId/items/:itemId').put(protect, admin, updateOrderItemStatus);
 
 // Product Routes
 router.route('/products/all').get(protect, admin, getAllProducts);

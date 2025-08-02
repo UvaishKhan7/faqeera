@@ -24,9 +24,11 @@ const getProducts = asyncHandler(async (req, res) => {
   }
 
   const products = await Product.find(filter).sort(sortOptions);
-  
-  // The crucial fix for your Admin Products page
-  res.json({ products, keyword, category: categoryQuery });
+
+  // Convert Mongoose documents to plain JS objects to avoid Symbol issues
+  const plainProducts = products.map((p) => p.toObject());
+
+  res.json({ products: plainProducts, keyword, category: categoryQuery });
 });
 
 // @desc    Get a single product by its ID
@@ -34,8 +36,9 @@ const getProducts = asyncHandler(async (req, res) => {
 // @access  Public
 const getProductById = asyncHandler(async (req, res) => {
   const product = await Product.findById(req.params.id);
+
   if (product) {
-    res.json(product);
+    res.json(product.toObject()); // Ensure plain object
   } else {
     res.status(404);
     throw new Error('Product not found');
@@ -45,9 +48,9 @@ const getProductById = asyncHandler(async (req, res) => {
 // @desc    Get a single product by its slug
 // @route   GET /api/products/slug/:slug
 // @access  Public
-// @desc    Get a single product by its slug
 const getProductBySlug = asyncHandler(async (req, res) => {
   const product = await Product.findOne({ slug: req.params.slug });
+
   if (product) {
     const productData = {
       ...product.toObject(),
@@ -72,13 +75,20 @@ const createProductReview = asyncHandler(async (req, res) => {
     throw new Error('Product not found');
   }
 
-  const alreadyReviewed = product.reviews.find(r => r.user.toString() === req.user._id.toString());
+  const alreadyReviewed = product.reviews.find(
+    (r) => r.user.toString() === req.user._id.toString()
+  );
+
   if (alreadyReviewed) {
     res.status(400);
     throw new Error('Product already reviewed');
   }
 
-  const hasPurchased = await Order.exists({ user: req.user._id, 'products.productId': req.params.id });
+  const hasPurchased = await Order.exists({
+    user: req.user._id,
+    'products.productId': req.params.id,
+  });
+
   if (!hasPurchased) {
     res.status(403);
     throw new Error("You can only review products you've purchased.");
@@ -93,9 +103,12 @@ const createProductReview = asyncHandler(async (req, res) => {
 
   product.reviews.push(review);
   product.numReviews = product.reviews.length;
-  product.rating = product.reviews.reduce((acc, item) => item.rating + acc, 0) / product.reviews.length;
+  product.rating =
+    product.reviews.reduce((acc, item) => item.rating + acc, 0) /
+    product.reviews.length;
 
   await product.save();
+
   res.status(201).json({ message: 'Review added' });
 });
 

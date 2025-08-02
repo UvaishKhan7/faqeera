@@ -5,38 +5,44 @@ const User = require('../models/user.model');
 const protect = asyncHandler(async (req, res, next) => {
   let token;
 
-  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith('Bearer')
+  ) {
     try {
-      // Get token from header
+      // 1. Get token from the header.
       token = req.headers.authorization.split(' ')[1];
 
-      // Verify token
+      // 2. Verify the token using our backend's JWT_SECRET to get the payload.
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-      // Get user from the token and attach to request (excluding password)
+      // 3. Use the ID from the token's payload to fetch the full, fresh user profile from the database.
+      // We exclude the password for security.
       req.user = await User.findById(decoded.id).select('-password');
-      
+      // Now, req.user is the complete user object: { _id, name, email, isAdmin, ... }
+
       if (!req.user) {
         res.status(401);
-        throw new Error('Not authorized, user not found');
+        throw new Error('Not authorized, user not found for this token');
       }
-
-      next();
+      
+      next(); // The user is valid and attached to the request, proceed.
     } catch (error) {
-      console.error(error);
-      res.status(401).json({ message: 'Not authorized, token failed' });
+      console.error('TOKEN VERIFICATION FAILED:', error.message);
+      res.status(401);
+      throw new Error('Not authorized, token failed');
     }
   }
 
   if (!token) {
-    res.status(401).json({ message: 'Not authorized, no token' });
+    res.status(401);
+    throw new Error('Not authorized, no token provided');
   }
 });
 
 const admin = (req, res, next) => {
-  // 'protect' middleware should have already run, attaching req.user
   if (req.user && req.user.isAdmin) {
-    next(); // User is an admin, proceed to the next function
+    next();
   } else {
     res.status(401);
     throw new Error('Not authorized as an admin');

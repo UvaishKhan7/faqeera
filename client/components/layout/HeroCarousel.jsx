@@ -1,4 +1,4 @@
-'use client'; // <-- This is the crucial "Client Boundary"
+'use client'; 
 
 import {
   Carousel,
@@ -11,19 +11,18 @@ import Autoplay from 'embla-carousel-autoplay';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { Progress } from '@radix-ui/react-progress';
 
-// This is now a CLIENT component. It receives the 'slides' data as a simple prop.
 export default function HeroCarousel({ slides }) {
   if (!slides || slides.length === 0) {
-    return null;
+    return <Progress />;
   }
 
   return (
     <section className="relative w-full h-[85vh] min-h-[500px]">
       <Carousel
         className="w-full h-full flex items-center justify-center"
-        // It is now safe to use the plugin here, inside a Client Component.
-        plugins={[
+          plugins={[
           Autoplay({
             delay: 5000,
             stopOnInteraction: true,

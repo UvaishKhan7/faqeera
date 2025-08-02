@@ -1,101 +1,143 @@
 // This is the single source of truth for our backend URL.
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-// This console.log is a crucial debugging tool.
-// It will appear in your BROWSER console.
-console.log("API Library Initialized. Using Base URL:", API_BASE_URL);
-
 /**
  * A centralized, robust fetch function for all our API calls.
- * @param {string} path - The API path to fetch (e.g., '/users/login').
- * @param {object} options - Optional fetch options (method, headers, body, cache).
- * @returns {Promise<object>} - The JSON response from the API.
- * @throws {Error} - Throws an error with the server's message if the fetch fails.
+ * This is the ONLY function that will construct URLs and use the `fetch` command.
  */
 async function fetchAPI(path, options = {}) {
-  // If the API_BASE_URL is not set, we must fail immediately.
+  
   if (!API_BASE_URL) {
-    const errorMessage = "FATAL: NEXT_PUBLIC_API_BASE_URL is not defined. Check client/.env.local";
-    console.error(errorMessage);
-    throw new Error(errorMessage);
+    const errorMsg = "FATAL ERROR: NEXT_PUBLIC_API_BASE_URL is not configured.";
+    console.error(errorMsg);
+    throw new Error(errorMsg);
   }
 
   const url = `${API_BASE_URL}/api${path}`;
   const defaultHeaders = { 'Content-Type': 'application/json' };
-  const config = {
-    ...options,
-    headers: { ...defaultHeaders, ...options.headers },
-  };
+  const config = { ...options, headers: { ...defaultHeaders, ...options.headers } };
 
   try {
     const res = await fetch(url, config);
-    
-    // Handle successful but empty responses (e.g., DELETE).
     if (res.status === 204) return { success: true };
-
     const data = await res.json();
-    
     if (!res.ok) {
-      // Use the specific error message from the backend if available.
-      throw new Error(data.message || `API request to ${path} failed with status ${res.status}`);
+      throw new Error(data.message || `API Error (${res.status})`);
     }
-    
     return data;
   } catch (error) {
-    console.error(`[FETCH_API_ERROR] Path: ${path}`, error.message);
-    throw error; // Re-throw the error so the calling component's catch block can handle it.
+    console.error(`[fetchAPI Error] Path: '${path}' | Message: ${error.message}`);
+    throw error;
   }
 }
 
-// --- AUTHENTICATION FUNCTIONS (Previously Missing) ---
-export const loginUser = (credentials) => fetchAPI('/users/login', {
-  method: 'POST',
-  body: JSON.stringify(credentials),
-});
-
+// === AUTHENTICATION ===
 export const registerUser = (userData) => fetchAPI('/users/register', {
   method: 'POST',
   body: JSON.stringify(userData),
 });
 
 
-// --- PUBLIC-FACING PRODUCT FUNCTIONS ---
-// ... (All other functions in this file are correct)
-
-// --- THIS IS THE FINAL, SIMPLIFIED VERSION ---
-export async function getPublicProducts(searchParams = {}) {
-  const params = new URLSearchParams(searchParams);
-  const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/products?${params.toString()}`;
-
-  try {
-    const res = await fetch(url, { cache: 'no-store' }); // Use no-store to guarantee freshness
-    if (!res.ok) throw new Error('Failed to fetch public products');
-    const data = await res.json();
-    
-    // It now ONLY returns the products array, which prevents crashes.
-    return data.products || []; 
-  } catch (error) {
-    console.error('[GET_PUBLIC_PRODUCTS_ERROR]', error);
-    return []; // Always return an array.
-  }
-}
+// === PUBLIC CONTENT ===
+export const getPublicProducts = ({ keyword = '', category = '', sortBy = '' } = {}) => {
+  const params = new URLSearchParams({ keyword, category, sortBy });
+  return fetchAPI(`/products?${params.toString()}`);
+};
 
 export const getProductBySlug = (slug) => fetchAPI(`/products/slug/${slug}`);
+export const getActiveHeroSlides = () => fetchAPI('/content/hero-slides', { next: { revalidate: 300 } });
 
 
-// --- ADMIN & PROTECTED USER FUNCTIONS ---
-export const getAdminProducts = (token) => fetchAPI('/admin/products/all', {
-  headers: { Authorization: `Bearer ${token}` },
-  cache: 'no-store',
-});
-
+// === PROTECTED USER ROUTES ===
 export const getMyOrders = (token) => fetchAPI('/orders/myorders', {
   headers: { Authorization: `Bearer ${token}` },
   cache: 'no-store',
 });
 
-// Note: getProductById is used by the admin edit page, so it should be protected.
-export const getProductById = (id, token) => fetchAPI(`/products/${id}`, {
+export const getUserProfile = (token) => fetchAPI('/users/profile', {
+  headers: { Authorization: `Bearer ${token}` },
+});
+
+export const updateUserProfile = ({ data, token }) => fetchAPI('/users/profile', {
+  method: 'PUT',
+  body: JSON.stringify(data),
+  headers: { Authorization: `Bearer ${token}` },
+});
+
+export const getMyAddresses = (token) => fetchAPI('/users/addresses', {
+  headers: { Authorization: `Bearer ${token}` },
+});
+
+export const addMyAddress = ({ address, token }) => fetchAPI('/users/addresses', {
+  method: 'POST',
+  body: JSON.stringify(address),
+  headers: { Authorization: `Bearer ${token}` },
+});
+
+export const updateMyAddress = ({ addressId, address, token }) => fetchAPI(`/users/addresses/${addressId}`, {
+  method: 'PUT',
+  body: JSON.stringify(address),
+  headers: { Authorization: `Bearer ${token}` },
+});
+
+export const toggleMyDefaultAddress = ({ addressId, token }) => fetchAPI(`/users/addresses/${addressId}/toggle-default`, {
+    method: 'PUT',
+    headers: { Authorization: `Bearer ${token}` },
+});
+
+export const deleteMyAddress = ({ addressId, token }) => fetchAPI(`/users/addresses/${addressId}`, {
+  method: 'DELETE',
+  headers: { Authorization: `Bearer ${token}` },
+});
+
+// === PROTECTED ADMIN ROUTES ===
+export const getAdminOrders = (token) => fetchAPI('/admin/orders', {
+  headers: { Authorization: `Bearer ${token}` },
+});
+
+export const updateOrderItemStatus = ({ orderId, itemId, status, trackingNumber, token }) => fetchAPI(`/admin/orders/${orderId}/items/${itemId}`, {
+  method: 'PUT',
+  body: JSON.stringify({ status, trackingNumber }),
+  headers: { Authorization: `Bearer ${token}` },
+});
+
+export const getAdminProducts = (token) => fetchAPI('/admin/products/all', {
+  headers: { Authorization: `Bearer ${token}` },
+});
+
+export const getAdminProductById = (id, token) => fetchAPI(`/products/${id}`, {
+  headers: { Authorization: `Bearer ${token}` },
+});
+
+export const createAdminProduct = ({ productData, token }) => fetchAPI('/admin/products', {
+  method: 'POST',
+  body: JSON.stringify(productData),
+  headers: { Authorization: `Bearer ${token}` },
+});
+
+export const updateAdminProduct = ({ productId, productData, token }) => fetchAPI(`/admin/products/${productId}`, {
+  method: 'PUT',
+  body: JSON.stringify(productData),
+  headers: { Authorization: `Bearer ${token}` },
+});
+
+export const deleteAdminProduct = ({ productId, token }) => fetchAPI(`/admin/products/${productId}`, {
+  method: 'DELETE',
+  headers: { Authorization: `Bearer ${token}` },
+});
+
+
+// === PROTECTED USER WISHLIST ROUTES ===
+
+// Fetches all products in the user's wishlist
+export const getMyWishlist = (token) => fetchAPI('/wishlist', {
   headers: { Authorization: `Bearer ${token}` },
   cache: 'no-store',
+});
+
+// Toggles (adds or removes) a product from the wishlist
+export const toggleMyWishlist = ({ productId, token }) => fetchAPI('/wishlist', {
+  method: 'POST',
+  body: JSON.stringify({ productId }),
+  headers: { Authorization: `Bearer ${token}` },
 });

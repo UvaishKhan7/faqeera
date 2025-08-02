@@ -36,6 +36,7 @@ const userRoutes = require('./routes/user.routes');
 const orderRoutes = require('./routes/order.routes');
 const adminRoutes = require('./routes/admin.routes');
 const siteContentRoutes = require('./routes/siteContent.routes');
+const wishlistRoutes = require('./routes/wishlist.routes');
 
 // Test Route
 app.get('/api', (req, res) => {
@@ -49,6 +50,7 @@ app.use('/api/payment', paymentRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/content', siteContentRoutes);
+app.use('/api/wishlist', wishlistRoutes);
 
 // --- ERROR HANDLING MIDDLEWARE ---
 const { notFound, errorHandler } = require('./middleware/error.middleware');

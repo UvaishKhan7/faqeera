@@ -1,16 +1,17 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { useAuthStore } from '@/store/auth';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { useSession } from 'next-auth/react';
 import SlideForm from '../../SlideForm';
+import { Skeleton } from '@/components/ui/skeleton';
 
-// Helper function to fetch a single slide
+// Helper function to fetch a single slide from Express API
 async function getSlide(id, token) {
   try {
-    const res = await fetch(`/api/admin/hero-slides/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/hero-slides/${id}`, {
+      headers: { Authorization: `Bearer ${token}` },
     });
     if (!res.ok) throw new Error('Failed to fetch slide data.');
     return res.json();
@@ -23,62 +24,72 @@ async function getSlide(id, token) {
 export default function EditSlidePage({ params }) {
   const { id } = params;
   const router = useRouter();
-  const { token } = useAuthStore();
-  
+  const { data: session, status } = useSession();
+
   const [slide, setSlide] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     const fetchSlide = async () => {
-        if (!token || !id) return;
-        setLoading(true);
-        // Note: We need a backend route to get a single slide by ID.
-        // We will create this next. For now, this code anticipates it.
-        const data = await getSlide(id, token);
-        if (data) setSlide(data);
-        else router.push('/admin/hero-section');
-        setLoading(false);
+      if (!session?.user?.accessToken || !id) return;
+
+      setLoading(true);
+      const data = await getSlide(id, session.user.accessToken);
+
+      if (data) setSlide(data);
+      else router.push('/admin/hero-section');
+
+      setLoading(false);
     };
+
     fetchSlide();
-  }, [id, token, router]);
+  }, [id, session?.user?.accessToken, router]);
 
   const handleUpdateSlide = async (values) => {
     setIsSubmitting(true);
-    const token = useAuthStore.getState().token;
+
+    const token = session?.user?.accessToken;
     if (!token) {
-      toast.error('Authentication error. Please refresh and log in again.');
+      toast.error('Authentication error. Please log in again.');
       setIsSubmitting(false);
       return;
     }
+
     try {
-      await fetch(`/api/admin/hero-slides/${id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/hero-slides/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(values),
       });
+
+      if (!res.ok) throw new Error('Failed to update slide.');
 
       toast.success('Slide updated successfully!');
       router.push('/admin/hero-section');
       router.refresh();
     } catch (error) {
-      toast.error('Failed to update slide.');
+      toast.error(error.message);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  if (loading) return <p className="text-center p-8">Loading slide data...</p>;
-  
+  if (loading) return (
+    <p className="text-center p-8">
+      <Skeleton />
+    </p>
+  )
+
   return (
     <div className="container mx-auto py-12">
       {slide && (
-        <SlideForm 
-          onSubmit={handleUpdateSlide} 
-          slide={slide} 
+        <SlideForm
+          onSubmit={handleUpdateSlide}
+          slide={slide}
           isSubmitting={isSubmitting}
         />
       )}
