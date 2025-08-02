@@ -2,10 +2,12 @@
 const nextConfig = {
   // This is the new function we are adding.
   async rewrites() {
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
     return [
       {
-        source: '/api/:path*', // Match any path starting with /api/
-        destination: 'http://localhost:5001/api/:path*', // And forward it to our backend
+        // ✅ Only rewrite API routes EXCEPT those starting with `/api/auth`
+        source: '/api/:path((?!auth).*)',
+        destination: `${baseUrl}/api/:path*`,
       },
     ];
   },
