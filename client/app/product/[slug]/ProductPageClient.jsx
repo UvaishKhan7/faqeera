@@ -71,7 +71,7 @@ export default function ProductPageClient({ product }) {
             initial={{ opacity: 0, x: -50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
-            className="sticky top-16 aspect-square bg-white z-50"
+            className="aspect-square bg-white z-50"
           >
             <ProductImageCarousel
               images={product.images}

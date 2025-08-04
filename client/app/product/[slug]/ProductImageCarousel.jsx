@@ -79,9 +79,9 @@ export default function ProductImageCarousel({ images, productName }) {
       {/* Thumbnail Navigation */}
       {images.length > 1 && (
         <Carousel setApi={setThumbnailApi} opts={{ slidesToScroll: 1, align: 'start' }} className="w-full">
-          <CarouselContent className="-ml-2">
+          <CarouselContent className="m-auto">
             {images.map((img, index) => (
-              <CarouselItem key={index} className="pl-2 basis-1/4 sm:basis-1/5">
+              <CarouselItem key={index} className="p-2 basis-1/4 sm:basis-1/5">
                 <div 
                     onClick={() => onThumbClick(index)} 
                     className={`

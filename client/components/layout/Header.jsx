@@ -54,10 +54,10 @@ export default function Header() {
   );
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/90">
+    <header className="sticky top-0 z-60 w-full py-2 bg-black">
       <div className="container mx-auto flex h-16 items-center justify-between gap-4 px-4">
-        <Link href="/" className="flex items-center shrink-0">
-          <Image src="/faqeera.svg" width={120} height={50} alt="Faqeera_logo" priority />
+        <Link href="/" className="flex items-center justify-center shrink-0">
+          <Image src="/BLVKC.svg" width={150} height={80} alt="Faqeera_logo" priority />
         </Link>
 
         <div className="hidden sm:flex flex-1 justify-center max-w-md">
@@ -75,7 +75,7 @@ export default function Header() {
                     <UserCircle className="h-6 w-6 ml-2" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56" align="end" forceMount>
+                <DropdownMenuContent className="w-56 z-70" align="end" forceMount>
                   <DropdownMenuItem onClick={() => router.push('/account')}>
                     <UserCircle className="mr-2 h-4 w-4" />
                     <span>My Account</span>
@@ -95,8 +95,8 @@ export default function Header() {
               </DropdownMenu>
             ) : (
               <>
-                <Button asChild variant="ghost"><Link href="/login">Log In</Link></Button>
-                <Button asChild><Link href="/register">Sign Up</Link></Button>
+                <Button asChild variant="outline"><Link href="/login">Log In</Link></Button>
+                <Button asChild variant="outline"><Link href="/register">Sign Up</Link></Button>
               </>
             )}
           </div>

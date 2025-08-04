@@ -1,5 +1,6 @@
 import ProductPageClient from './ProductPageClient';
 import { getProductBySlug } from '@/lib/api';
+import { Progress } from '@radix-ui/react-progress';
 import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
 
@@ -16,7 +17,7 @@ async function ProductLoader({ params }) {
 
 export default function ProductDetailPage({ params }) {
   return (
-    <Suspense fallback={<div className="container text-center p-24">Loading product...</div>}>
+    <Suspense fallback={<Progress />}>
       <ProductLoader params={params} />
     </Suspense>
   );

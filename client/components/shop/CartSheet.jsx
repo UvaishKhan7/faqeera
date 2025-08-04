@@ -54,7 +54,7 @@ export default function CartSheet() {
           )}
         </Button>
       </SheetTrigger>
-      <SheetContent>
+      <SheetContent className='z-80'>
         <SheetHeader>
           <SheetTitle>Shopping Cart</SheetTitle>
         </SheetHeader>
